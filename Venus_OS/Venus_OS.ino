@@ -1,18 +1,9 @@
 #pragma once
 #include <Servo.h>
 #include "OS_functions.h"
-#include "Mapping.h"
-#include "Interrupts.h"
-#include "Motor.h"
-#include "Samples.h"
-#include "Ultrasound.h"
-#include "Wireless.h"
-
-byte Xsize = 20, Ysize = 20;
 
 void setup() {
-  theMap = createTheMatrix(Xsize,Ysize);
-  Serial.begin(115200);
+  Serial.begin(9600);
   initializeInterrupts();
   head.attach(10, 1400, 1600);
   rightWheel.attach(13, 1250, 1750);
@@ -27,21 +18,25 @@ void setup() {
 }
 
 void loop() {
-  head.write(180); // turn head right
-  roam(); // robot explores the area
+  if (rock == 0) {
+    /*if (gap == 0) {
+      gapCalibrate();
+    }*/
+    head.write(180); // turn head right
+    roam(); // robot explores the area
 
-  head.write(90); // robot centers head
-  delay(500);
-  forwardUS = centimetersToTarget();
-  Serial.println(forwardUS);
+    head.write(90); // robot centers head
+    delay(500);
+    forwardUS = centimetersToTarget();
+    Serial.println(forwardUS);
 
-  head.write(0); // turn head left
-  delay(1000);
-  Serial.print("X: ");
-  Serial.println(Xposition, DEC);
-  Serial.print("Y: ");
-  Serial.println(Yposition, DEC);
-  Serial.print("Direction: ");
-  Serial.println(currDirection, DEC);
-  displayMatrix(theMap, Xsize, Ysize);
+    head.write(0); // turn head left
+    delay(1000);
+  }
+  else if (rock) {
+    alignToRock();
+    grabRock();
+    alignToMap();
+    // find lab and drop sample
+  }
 }
