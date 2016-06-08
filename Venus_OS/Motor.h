@@ -59,14 +59,12 @@ void calcUSRelLoc() {
   int dist;
   head.write(USPos);
   dist = centimetersToTarget();
-  if(dist < 32){
-    xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10);
-    yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
-  }
-  /*Serial.print("US X-coord: ");
+  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  Serial.print("US X-coord: ");
   Serial.println(xDist);
   Serial.print("US Y-coord: ");
-  Serial.println(yDist);*/
+  Serial.println(yDist);
   USPos = 0;
   return;
 }
@@ -107,7 +105,7 @@ void checkRock() {
 }
 
 void checkUS() {
-  if (ultraSoundDist <= 50) {
+  if (ultraSoundDist <= 32) {
     closeUS = 1;
   }
   return;
@@ -279,7 +277,7 @@ void scan() {
     head.write(pos);
     ultraSoundDist = centimetersToTarget(); // robot measures distance
     delay(100); // robot waits for the equipment to do its work
-    if (ultraSoundDist <= 100) {
+    if (ultraSoundDist <= 32) {
       USPos = pos; // saves position with low value, priority to targets to the front
       calcUSRelLoc();
       switch(currDirection){
