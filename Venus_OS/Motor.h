@@ -5,6 +5,7 @@
 #include "Mapping.h"
 #include "OS_functions.h"
 #include "Motor.cpp"
+#include "Samples.h"
 #define rightEncoderPin 8
 #define leftEncoderPin 7
 
@@ -23,6 +24,7 @@ int yDist = 0;
 
 bool gap = 0;
 bool closeUS = 0;
+bool rock = 0;
 
 byte Xposition = 5; 
 byte Yposition = 5; //Variables that keep track of the robots current position
@@ -69,14 +71,17 @@ void stopRobot() {
   leftWheel.write(90);
   rightEncoder = 0;
   leftEncoder = 0;
+  return;
 }
 
 void gripperOpen() {
   gripper.write(90); // grippers open
+  return;
 }
 
 void gripperGrab() {
   gripper.write(1); // grippers close
+  return;
 }
 
 void checkGap() {
@@ -85,13 +90,22 @@ void checkGap() {
     gapRight = 0;
     gapLeft = 0;
   }
+  return;
 }
 
+void checkRock() {
+  if (readSamples() >= 60) {
+    rock = 1;
+  }
+  Serial.write(readSamples());
+  return;
+}
 
 void checkUS() {
   if (ultraSoundDist <= 30) {
     closeUS = 1;
   }
+  return;
 }
 
 void checkSides(){
@@ -275,6 +289,7 @@ void scan() {
     }
   }
   //delay(100);
+  return;
 }
 
 void roam() {

@@ -10,5 +10,6 @@ int readSamples(){
   int low = analogRead(1);
   int diff = low - high;
   Serial.println(diff,DEC);
+  return diff;
 }
 

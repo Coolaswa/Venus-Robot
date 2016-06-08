@@ -28,6 +28,10 @@ void setup() {
 }
 
 void loop() {
+  if (rock == 0) {
+    /*if (gap == 0) {
+      gapCalibrate();
+    }*/
   head.write(180); // turn head right
   roam(); // robot explores the area
 
@@ -45,4 +49,10 @@ void loop() {
   Serial.print("Direction: ");
   Serial.println(currDirection, DEC);
   displayMatrix(theMap, Xsize, Ysize);
+  else if (rock) {
+    alignToRock();
+    grabRock();
+    alignToMap();
+    // find lab and drop sample
+  }
 }
