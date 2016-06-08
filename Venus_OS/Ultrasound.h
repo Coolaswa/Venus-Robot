@@ -15,5 +15,6 @@ long centimetersToTarget() {
   duration = pulseIn(pingPin, HIGH);
   /*Serial.print("Ping result: ");
   Serial.println(duration / 58);*/
+  delay(10);
   return duration / 58;
 }

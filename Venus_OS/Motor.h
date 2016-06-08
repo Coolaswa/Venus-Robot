@@ -59,12 +59,14 @@ void calcUSRelLoc() {
   int dist;
   head.write(USPos);
   dist = centimetersToTarget();
-  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  Serial.print("Distance to mountain: ");
+  Serial.println(dist,DEC);
+  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10); //VERY CPU intensive code!
   yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
   Serial.print("US X-coord: ");
-  Serial.println(xDist);
+  Serial.println(xDist,DEC);
   Serial.print("US Y-coord: ");
-  Serial.println(yDist);
+  Serial.println(yDist,DEC);
   USPos = 0;
   return;
 }
@@ -221,7 +223,8 @@ void driveForward() {
     stopRobot(); // robot stops
     updatePosition();
     writeToMatrix(theMap, Xposition, Yposition, EMPTY);
-    
+    updatePosition();
+    writeToMatrix(theMap, Xposition, Yposition, EMPTY);
   }
   return;
 }
@@ -236,8 +239,8 @@ void turnRight() {
   reverse = 0;
   stopRobot(); // robot stops
   while (rightEncoder <= 6) { // robot turns right
-    rightWheel.write(0);
-    leftWheel.write(0);
+    rightWheel.write(180);
+    leftWheel.write(180);
   }
   stopRobot(); // robot stops
   if(currDirection < LEFT){
@@ -257,9 +260,9 @@ void turnLeft() {
   gap = 0;
   reverse = 0;
   stopRobot(); // robot stops
-  while (rightEncoder <= 6) { // robot turns left
-    rightWheel.write(180);
-    leftWheel.write(180);
+  while (rightEncoder <= 12) { // robot turns left
+    rightWheel.write(0);
+    leftWheel.write(0);
   }
   stopRobot(); // robot stops
   if(currDirection == UP){
@@ -275,8 +278,9 @@ void scan() {
   delay(1200);
   for (pos = 0; pos < 180; pos += 15) { // robot sweeps head
     head.write(pos);
-    ultraSoundDist = centimetersToTarget(); // robot measures distance
     delay(100); // robot waits for the equipment to do its work
+    ultraSoundDist = centimetersToTarget(); // robot measures distance
+
     if (ultraSoundDist <= 32) {
       USPos = pos; // saves position with low value, priority to targets to the front
       calcUSRelLoc();
@@ -303,11 +307,11 @@ void roam() {
   if ((gap || forwardUS <= 40) && failCount == 0) {
     turnRight(); // robot turns right
     failCount++;
-  }
-  else if ((gap || forwardUS <= 40) && failCount == 1) {
+    }
+  /*else if ((gap || forwardUS <= 40) && failCount == 1) {
     turnLeft(); // robot turns left
     failCount++;
-  }
+  }*/
   else {
     driveForward(); // robot moves forward
   }
@@ -317,4 +321,5 @@ void roam() {
     scan();
     calcUSRelLoc();
   }
+  closeUS = 0;
 }
