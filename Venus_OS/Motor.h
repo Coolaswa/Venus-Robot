@@ -25,8 +25,8 @@ bool gap = 0;
 bool closeUS = 0;
 bool rock = 0;
 
-byte Xposition = 5; 
-byte Yposition = 5; //Variables that keep track of the robots current position
+byte Xposition = 15; 
+byte Yposition = 15; //Variables that keep track of the robots current position
 
 enum direction_t {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}; //Up is +Y direction, right is +X direction
 

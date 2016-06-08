@@ -9,7 +9,7 @@
 #include "Wireless.h"
 #include "Sample_detection.h"
 
-byte Xsize = 10, Ysize = 10;
+byte Xsize = 30, Ysize = 30;
 
 void setup() {
   theMap = createTheMatrix(Xsize,Ysize);
