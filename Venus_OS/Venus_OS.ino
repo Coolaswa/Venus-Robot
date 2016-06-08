@@ -8,6 +8,7 @@
 #include "Samples.h"
 #include "Ultrasound.h"
 #include "Wireless.h"
+#include "Sample_detection.h"
 
 byte Xsize = 10, Ysize = 10;
 
@@ -49,7 +50,7 @@ void loop() {
   Serial.print("Direction: ");
   Serial.println(currDirection, DEC);
   displayMatrix(theMap, Xsize, Ysize);
-  else if (rock) {
+  } else if (rock) {
     alignToRock();
     grabRock();
     alignToMap();

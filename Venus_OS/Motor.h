@@ -193,6 +193,8 @@ void driveForward() {
     rightWheel.write(180);
     leftWheel.write(0);
 
+    checkRock();
+
     rightBlackCounter = 0;
     rightWhiteCounter = 0;
     leftBlackCounter = 0;
