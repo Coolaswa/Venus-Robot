@@ -4,11 +4,12 @@
 #include "Mapping.h"
 #include "Interrupts.h"
 #include "Motor.h"
+#include "Motor.cpp"
 #include "Samples.h"
 #include "Ultrasound.h"
 #include "Wireless.h"
 
-byte Xsize = 20, Ysize = 20;
+byte Xsize = 10, Ysize = 10;
 
 void setup() {
   theMap = createTheMatrix(Xsize,Ysize);

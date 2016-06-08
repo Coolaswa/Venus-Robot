@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h> 
 #include "Motor.h"
+#include "Motor.cpp"
 
 volatile bool encoderSevenOn, twoBlack = 0, threeBlack = 0;
 volatile bool gapRight = 0;

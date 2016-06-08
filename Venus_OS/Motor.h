@@ -2,9 +2,13 @@
 #include <Arduino.h>
 #include "Ultrasound.h"
 #include "Interrupts.h"
+#include "Mapping.h"
+#include "OS_functions.h"
+#include "Motor.cpp"
 #define rightEncoderPin 8
 #define leftEncoderPin 7
-#include "Mapping.h"
+
+byte** theMap;
 
 int pos = 0;
 int ultraSoundDist = 0;
@@ -12,21 +16,53 @@ int USPos = 0;
 int rightFloor = 0;
 int leftFloor = 0;
 
+int failCount = 0;
+int forwardUS = 200;
+int xDist = 0;
+int yDist = 0;
+
 bool gap = 0;
 bool closeUS = 0;
 
-byte Xposition = 10, Yposition = 10; //Variables that keep track of the robots current position
+byte Xposition = 5; 
+byte Yposition = 5; //Variables that keep track of the robots current position
 
 enum direction_t {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}; //Up is +Y direction, right is +X direction
 
 direction_t currDirection = UP;
 
-byte** theMap;
-
 Servo rightWheel;
 Servo leftWheel;
 Servo head;
 Servo gripper;
+
+void gapCalibrate() {
+  rightFloor = 0;
+  leftFloor = 0;
+  int i;
+  int right = 0;
+  int left = 0;
+  for (i = 0; i < 10; i++) {
+  right = analogRead(1);
+  left = analogRead(2);
+  Serial.println(rightFloor);
+  Serial.println(leftFloor);
+  rightFloor = rightFloor + right;
+  leftFloor = leftFloor + left;
+  }
+  rightFloor = rightFloor/10;
+  leftFloor = leftFloor/10;
+}
+
+void calcUSRelLoc() {
+  int dist;
+  head.write(USPos);
+  dist = centimetersToTarget();
+  xDist = (dist * cos(USPos))/10;
+  yDist = (dist * sin(USPos))/10;
+  USPos = 0;
+  return;
+}
 
 void stopRobot() {
   rightWheel.write(90); // robot stops
@@ -220,13 +256,46 @@ void scan() {
     head.write(pos);
     ultraSoundDist = centimetersToTarget(); // robot measures distance
     delay(15); // robot waits for the equipment to do its work
-    if (pos >= 120 && USPos > 0) { // robot doesn't care about things to the side when there's someting in front of it
-      break;
-    }
-    if (ultraSoundDist <= 80) {
+    if (ultraSoundDist <= 100) {
       USPos = pos; // saves position with low value, priority to targets to the front
+      calcUSRelLoc();
+      switch(currDirection){
+        case UP:
+          writeToMatrix(theMap, Xposition + xDist, Yposition + yDist, MOUNTAIN);
+        break;
+        case RIGHT:
+          writeToMatrix(theMap, Xposition + yDist, Yposition - xDist, MOUNTAIN);
+        break;
+          case DOWN:
+          writeToMatrix(theMap, Xposition - xDist, Yposition - yDist, MOUNTAIN);
+        case LEFT:
+          writeToMatrix(theMap, Xposition - yDist, Yposition + xDist, MOUNTAIN);
+        break;
+      }
     }
   }
   //delay(100);
 }
 
+void roam() {
+  //scan(); // robot sweeps head
+  if ((gap || forwardUS <= 40) && failCount == 0) {
+    turnRight(); // robot turns right
+    failCount++;
+  }
+  else if ((gap || forwardUS <= 40) && failCount == 1) {
+    turnLeft(); // robot turns left
+    failCount++;
+  }
+  else {
+    driveForward(); // robot moves forward
+  }
+  failCount = 0;
+  if (closeUS == 1) {
+    delay(250);
+    scan();
+    calcUSRelLoc();
+    /*Serial.println(xDist);
+    Serial.println(yDist);*/
+  }
+}
