@@ -289,12 +289,12 @@ void scan() {
           writeToMatrix(theMap, Xposition - xDist, Yposition + yDist, MOUNTAIN);
         break;
         case RIGHT:
-          writeToMatrix(theMap, Xposition + yDist, Yposition - xDist, MOUNTAIN);
+          writeToMatrix(theMap, Xposition + yDist, Yposition + xDist, MOUNTAIN);
         break;
           case DOWN:
-          writeToMatrix(theMap, Xposition - xDist, Yposition + yDist, MOUNTAIN);
+          writeToMatrix(theMap, Xposition + xDist, Yposition - yDist, MOUNTAIN);
         case LEFT:
-          writeToMatrix(theMap, Xposition + yDist, Yposition - xDist, MOUNTAIN);
+          writeToMatrix(theMap, Xposition - yDist, Yposition - xDist, MOUNTAIN);
         break;
       }
     }
