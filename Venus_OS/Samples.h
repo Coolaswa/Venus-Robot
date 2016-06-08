@@ -9,7 +9,7 @@ int readSamples(){
   delayMicroseconds(200);
   int low = analogRead(1);
   int diff = low - high;
-  Serial.println(diff,DEC);
+  //Serial.println(diff,DEC);
   return diff;
 }
 

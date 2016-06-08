@@ -13,5 +13,7 @@ long centimetersToTarget() {
   digitalWrite(pingPin, LOW);
   pinMode(pingPin, INPUT);
   duration = pulseIn(pingPin, HIGH);
-  return duration / 29 / 2;
+  /*Serial.print("Ping result: ");
+  Serial.println(duration / 58);*/
+  return duration / 58;
 }

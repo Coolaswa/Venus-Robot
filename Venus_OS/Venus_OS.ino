@@ -4,7 +4,6 @@
 #include "Mapping.h"
 #include "Interrupts.h"
 #include "Motor.h"
-#include "Motor.cpp"
 #include "Samples.h"
 #include "Ultrasound.h"
 #include "Wireless.h"
@@ -39,7 +38,7 @@ void loop() {
   head.write(90); // robot centers head
   delay(500);
   forwardUS = centimetersToTarget();
-  Serial.println(forwardUS);
+  //Serial.println(forwardUS);
 
   head.write(0); // turn head left
   delay(1000);

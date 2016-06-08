@@ -4,7 +4,6 @@
 #include "Interrupts.h"
 #include "Mapping.h"
 #include "OS_functions.h"
-#include "Motor.cpp"
 #include "Samples.h"
 #define rightEncoderPin 8
 #define leftEncoderPin 7
@@ -47,8 +46,8 @@ void gapCalibrate() {
   for (i = 0; i < 10; i++) {
   right = analogRead(1);
   left = analogRead(2);
-  Serial.println(rightFloor);
-  Serial.println(leftFloor);
+  //Serial.println(rightFloor);
+  //Serial.println(leftFloor);
   rightFloor = rightFloor + right;
   leftFloor = leftFloor + left;
   }
@@ -60,8 +59,14 @@ void calcUSRelLoc() {
   int dist;
   head.write(USPos);
   dist = centimetersToTarget();
-  xDist = (dist * cos(USPos))/10;
-  yDist = (dist * sin(USPos))/10;
+  if(dist < 32){
+    xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+    yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  }
+  /*Serial.print("US X-coord: ");
+  Serial.println(xDist);
+  Serial.print("US Y-coord: ");
+  Serial.println(yDist);*/
   USPos = 0;
   return;
 }
@@ -97,12 +102,12 @@ void checkRock() {
   if (readSamples() >= 60) {
     rock = 1;
   }
-  Serial.write(readSamples());
+  //Serial.write(readSamples());
   return;
 }
 
 void checkUS() {
-  if (ultraSoundDist <= 30) {
+  if (ultraSoundDist <= 50) {
     closeUS = 1;
   }
   return;
@@ -268,10 +273,12 @@ void turnLeft() {
 }
 
 void scan() {
-  for (pos = 0; pos < 180; pos += 1) { // robot sweeps head
+  head.write(0);
+  delay(1200);
+  for (pos = 0; pos < 180; pos += 15) { // robot sweeps head
     head.write(pos);
     ultraSoundDist = centimetersToTarget(); // robot measures distance
-    delay(15); // robot waits for the equipment to do its work
+    delay(100); // robot waits for the equipment to do its work
     if (ultraSoundDist <= 100) {
       USPos = pos; // saves position with low value, priority to targets to the front
       calcUSRelLoc();
@@ -290,7 +297,6 @@ void scan() {
       }
     }
   }
-  //delay(100);
   return;
 }
 
@@ -312,7 +318,5 @@ void roam() {
     delay(250);
     scan();
     calcUSRelLoc();
-    /*Serial.println(xDist);
-    Serial.println(yDist);*/
   }
 }
