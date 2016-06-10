@@ -15,12 +15,9 @@ void setup() {
   theMap = createTheMatrix(Xsize,Ysize);
   Serial.begin(115200);
   initializeInterrupts();
-  //head.attach(10, 1400, 1600);
-  head.attach(10);
-  /*rightWheel.attach(13, 1250, 1750);
-  leftWheel.attach(12, 1250, 1750);*/
-  rightWheel.attach(13);
-  leftWheel.attach(12);
+  head.attach(10, 1400, 1600);
+  rightWheel.attach(12, 1250, 1750);
+  leftWheel.attach(13, 1250, 1750);
   gripper.attach(11); // attaches servos to pins
   gripperGrab(); // opens gripper
   gapCalibrate();
@@ -53,6 +50,8 @@ void loop() {
   Serial.println(currDirection, DEC);
   displayMatrix(theMap, Xsize, Ysize);
   } else if (rock) {
+    head.write(90);
+    delay(600);
     alignToRock();
     grabRock();
     alignToMap();

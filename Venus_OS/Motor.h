@@ -99,7 +99,7 @@ void checkGap() {
 }
 
 void checkRock() {
-  if (readSamples() >= 60) {
+  if (readSamples() > 35 || analogRead(4) > 600) {
     rock = 1;
   }
   //Serial.write(readSamples());
@@ -195,8 +195,8 @@ void updatePosition(){
 
 void driveForward() {
   while (rightEncoder < 16) { // robot moves forward
-    rightWheel.write(180);
-    leftWheel.write(0);
+    rightWheel.write(0);
+    leftWheel.write(180);
 
     checkRock();
 
@@ -232,8 +232,8 @@ void driveForward() {
 void turnRight() {
   reverse = 1;
   while (rightEncoder > 0) {
-    rightWheel.write(0);
-    leftWheel.write(180);
+    rightWheel.write(180);
+    leftWheel.write(0);
   }
   gap = 0;
   reverse = 0;
@@ -254,8 +254,8 @@ void turnRight() {
 void turnLeft() {
   reverse = 1;
   while (rightEncoder > 0) {
-    rightWheel.write(0);
-    leftWheel.write(180);
+    rightWheel.write(180);
+    leftWheel.write(0);
   }
   gap = 0;
   reverse = 0;
@@ -279,6 +279,7 @@ void scan() {
   for (pos = 0; pos < 180; pos += 15) { // robot sweeps head
     head.write(pos);
     delay(100); // robot waits for the equipment to do its work
+    checkRock();
     ultraSoundDist = centimetersToTarget(); // robot measures distance
 
     if (ultraSoundDist <= 32) {
@@ -304,14 +305,15 @@ void scan() {
 
 void roam() {
   //scan(); // robot sweeps head
+  closeUS = 0;
   if ((gap || forwardUS <= 40) && failCount == 0) {
     turnRight(); // robot turns right
     failCount++;
     }
-  /*else if ((gap || forwardUS <= 40) && failCount == 1) {
+  else if ((gap || forwardUS <= 40) && failCount == 1) {
     turnLeft(); // robot turns left
     failCount++;
-  }*/
+  }
   else {
     driveForward(); // robot moves forward
   }
@@ -321,5 +323,5 @@ void roam() {
     scan();
     calcUSRelLoc();
   }
-  closeUS = 0;
+  
 }
