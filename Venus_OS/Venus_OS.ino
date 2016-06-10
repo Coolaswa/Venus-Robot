@@ -17,10 +17,10 @@ void setup() {
   initializeInterrupts();
   //head.attach(10, 1400, 1600);
   head.attach(10);
-  /*rightWheel.attach(13, 1250, 1750);
-  leftWheel.attach(12, 1250, 1750);*/
-  rightWheel.attach(13);
-  leftWheel.attach(12);
+  rightWheel.attach(13, 1250, 1750);
+  leftWheel.attach(12, 1250, 1750);
+  /*rightWheel.attach(13);
+  leftWheel.attach(12);*/
   gripper.attach(11); // attaches servos to pins
   gripperGrab(); // opens gripper
   gapCalibrate();

@@ -3,7 +3,7 @@
 
 #define pingPin 9
 
-long centimetersToTarget() {
+int centimetersToTarget() {
   long duration, cm;
   pinMode(pingPin, OUTPUT);
   digitalWrite(pingPin, LOW);
@@ -16,5 +16,5 @@ long centimetersToTarget() {
   /*Serial.print("Ping result: ");
   Serial.println(duration / 58);*/
   delay(10);
-  return duration / 58;
+  return (int)(duration / 58);
 }
