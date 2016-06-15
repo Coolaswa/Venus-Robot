@@ -17,10 +17,10 @@ void setup() {
   initializeInterrupts();
   //head.attach(10, 1400, 1600);
   head.attach(10);
-  /*rightWheel.attach(13, 1250, 1750);
-  leftWheel.attach(12, 1250, 1750);*/
-  rightWheel.attach(13);
-  leftWheel.attach(12);
+  rightWheel.attach(13, 1250, 1750);
+  leftWheel.attach(12, 1250, 1750);
+  /*rightWheel.attach(13);
+  leftWheel.attach(12);*/
   gripper.attach(11); // attaches servos to pins
   gripperGrab(); // opens gripper
   gapCalibrate();
@@ -31,10 +31,10 @@ void setup() {
 }
 
 void loop() {
-  if (rock == 0) {
-    /*if (gap == 0) {
-      gapCalibrate();
-    }*/
+  /*if (rock == 0) {
+    //if (gap == 0) {
+    //  gapCalibrate();
+    //}
   head.write(180); // turn head right
   roam(); // robot explores the area
 
@@ -57,5 +57,10 @@ void loop() {
     grabRock();
     alignToMap();
     // find lab and drop sample
-  }
+  }*/
+  Serial.print("Sensor 1: ");
+  Serial.println(analogRead(1));
+  Serial.print("Sensor 2: ");
+  Serial.println(analogRead(2));
+  delay(100);
 }
