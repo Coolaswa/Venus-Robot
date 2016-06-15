@@ -21,6 +21,9 @@ int forwardUS = 200;
 int xDist = 0;
 int yDist = 0;
 
+int tempEncoder = 0;
+int backToMapEncoder = 0;
+
 bool gap = 0;
 bool closeUS = 0;
 bool rock = 0;
@@ -99,8 +102,10 @@ void checkGap() {
 }
 
 void checkRock() {
-  if (readSamples() > 35 || analogRead(4) > 600) {
+  int i = readSamples();
+  if (i > 500 && i < 850) {
     rock = 1;
+    Serial.println(readSamples());
   }
   //Serial.write(readSamples());
   return;
@@ -198,15 +203,23 @@ void driveForward() {
     rightWheel.write(0);
     leftWheel.write(180);
 
-    checkRock();
+    
 
     rightBlackCounter = 0;
     rightWhiteCounter = 0;
     leftBlackCounter = 0;
     leftWhiteCounter = 0;
-
-    checkSides();
     
+    checkRock();
+    Serial.println(readSamples());
+    if (rock) {
+      
+      backToMapEncoder = rightEncoder;
+      stopRobot();
+      return;
+    }
+    
+    checkSides();
     checkGap();
     if (gap) {
       writeBorderToMap();
@@ -214,10 +227,18 @@ void driveForward() {
     }
     ultraSoundDist = centimetersToTarget(); // robot scans around
     checkUS(); // checks for close objects with US data
+        checkRock();
+    if (rock) {
+      
+      backToMapEncoder = rightEncoder;
+      stopRobot();
+      return;
+    }
   }
   if (gap) {
     rightWheel.write(90);
     leftWheel.write(90);
+    tempEncoder = rightEncoder;
   }
   if (gap == 0) {
     stopRobot(); // robot stops
@@ -231,6 +252,8 @@ void driveForward() {
 
 void turnRight() {
   reverse = 1;
+  rightEncoder = tempEncoder;
+  tempEncoder = 0;
   while (rightEncoder > 0) {
     rightWheel.write(180);
     leftWheel.write(0);
@@ -253,6 +276,8 @@ void turnRight() {
 
 void turnLeft() {
   reverse = 1;
+  rightEncoder = tempEncoder;
+  tempEncoder = 0;
   while (rightEncoder > 0) {
     rightWheel.write(180);
     leftWheel.write(0);

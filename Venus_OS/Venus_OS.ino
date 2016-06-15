@@ -25,6 +25,7 @@ void setup() {
   rightWheel.write(90); // robot stops
   leftWheel.write(90);
   delay(1200); // waits for head to be in position
+  pinMode(4, INPUT);
 }
 
 void loop() {
