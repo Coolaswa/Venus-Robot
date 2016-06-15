@@ -116,16 +116,20 @@ void checkUS() {
 void checkSides(){
     int i;
     for (i = 0; i < 10; i++) { // robot looks at the ground to see if there is a gap or not
-      if (analogRead(1) > (rightFloor+35)) {
+      int gapRead = analogRead(1); //Left
+      if (gapRead > (rightFloor+35)) {
         rightBlackCounter++;
-      }
-      else {
+      } else if(gapRead > (rightFloor+25) && gapRead < (rightFloor+35)){
+        Serial.println("Lab detected!");
+      } else {
         rightWhiteCounter++;
       }
+      gapRead = analogRead(2); //Right
       if (analogRead(2) > (leftFloor+35)) {
         leftBlackCounter++;
-      }
-      else {
+      } else if(gapRead > (rightFloor+25) && gapRead < (rightFloor+35)){ 
+        Serial.println("Lab detected!");
+      } else {
         leftWhiteCounter++;
       }
     }
