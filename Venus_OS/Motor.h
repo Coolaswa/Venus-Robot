@@ -21,6 +21,9 @@ int forwardUS = 200;
 int xDist = 0;
 int yDist = 0;
 
+int targetX = 20;
+int targetY = 20;
+
 bool gap = 0;
 bool closeUS = 0;
 bool rock = 0;
@@ -28,7 +31,7 @@ bool rock = 0;
 byte Xposition = 15; 
 byte Yposition = 15; //Variables that keep track of the robots current position
 
-enum direction_t {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}; //Up is +Y direction, right is +X direction
+enum direction_t {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}; //Up is +Y direction, left is +X direction
 
 direction_t currDirection = UP;
 
@@ -61,8 +64,22 @@ void calcUSRelLoc() {
   dist = centimetersToTarget();
   Serial.print("Distance to mountain: ");
   Serial.println(dist,DEC);
-  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10); //VERY CPU intensive code!
-  yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  if(xDist > 0){
+    xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10 + 1); //VERY CPU intensive code!
+  } else if ( xDist < 0){
+    xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10 - 1); 
+  } else {
+    xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  }
+  if(yDist > 0){
+    yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10 + 1);
+  } else if(yDist < 0){
+    xDist = 0;
+    yDist = 0;
+  } else {
+    yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  }
+  
   Serial.print("US X-coord: ");
   Serial.println(xDist,DEC);
   Serial.print("US Y-coord: ");
@@ -107,7 +124,7 @@ void checkRock() {
 }
 
 void checkUS() {
-  if (ultraSoundDist <= 32) {
+  if (ultraSoundDist <= 43) {
     closeUS = 1;
   }
   return;
@@ -145,13 +162,13 @@ void writeBorderToMap(){
             writeToMatrix(theMap, Xposition, Yposition + 1, BORDER);
             break;
           case RIGHT:
-            writeToMatrix(theMap, Xposition + 1, Yposition, BORDER);
+            writeToMatrix(theMap, Xposition - 1, Yposition, BORDER);
             break;
           case DOWN:
             writeToMatrix(theMap, Xposition, Yposition - 1, BORDER);
             break;
           case LEFT:
-            writeToMatrix(theMap, Xposition - 1, Yposition, BORDER);
+            writeToMatrix(theMap, Xposition + 1, Yposition, BORDER);
             break;
         }
       } else {
@@ -161,16 +178,16 @@ void writeBorderToMap(){
             writeToMatrix(theMap, Xposition, Yposition + 1, EMPTY);
             break;
           case RIGHT:
-            writeToMatrix(theMap, Xposition + 2, Yposition, BORDER);
-            writeToMatrix(theMap, Xposition + 1, Yposition, EMPTY);
+            writeToMatrix(theMap, Xposition - 2, Yposition, BORDER);
+            writeToMatrix(theMap, Xposition - 1, Yposition, EMPTY);
             break;
           case DOWN:
             writeToMatrix(theMap, Xposition, Yposition - 2, BORDER);
             writeToMatrix(theMap, Xposition, Yposition -1, EMPTY);
             break;
           case LEFT:
-            writeToMatrix(theMap, Xposition - 2, Yposition, BORDER);
-            writeToMatrix(theMap, Xposition -1, Yposition, EMPTY);
+            writeToMatrix(theMap, Xposition + 2, Yposition, BORDER);
+            writeToMatrix(theMap, Xposition + 1, Yposition, EMPTY);
             break;
         }
       }
@@ -182,13 +199,13 @@ void updatePosition(){
             Yposition++;
             break;
           case RIGHT:
-            Xposition++;
+            Xposition--;
             break;
           case DOWN:
             Yposition--;
             break;
           case LEFT:
-            Xposition--;
+            Xposition++;
             break;
         }
 }
@@ -278,24 +295,26 @@ void scan() {
   delay(1200);
   for (pos = 0; pos < 180; pos += 15) { // robot sweeps head
     head.write(pos);
-    delay(100); // robot waits for the equipment to do its work
+    delay(140); // robot waits for the equipment to do its work
     ultraSoundDist = centimetersToTarget(); // robot measures distance
 
-    if (ultraSoundDist <= 32) {
+    if (ultraSoundDist <= 43) {
       USPos = pos; // saves position with low value, priority to targets to the front
       calcUSRelLoc();
-      switch(currDirection){
-        case UP:
-          writeToMatrix(theMap, Xposition - xDist, Yposition + yDist, MOUNTAIN);
-        break;
-        case RIGHT:
-          writeToMatrix(theMap, Xposition + yDist, Yposition + xDist, MOUNTAIN);
-        break;
-          case DOWN:
-          writeToMatrix(theMap, Xposition + xDist, Yposition - yDist, MOUNTAIN);
-        case LEFT:
-          writeToMatrix(theMap, Xposition - yDist, Yposition - xDist, MOUNTAIN);
-        break;
+      if(xDist != 0 && yDist != 0){
+        switch(currDirection){
+          case UP:
+            writeToMatrix(theMap, Xposition - xDist, Yposition + yDist, MOUNTAIN);
+          break;
+          case RIGHT:
+            writeToMatrix(theMap, Xposition - yDist, Yposition - xDist, MOUNTAIN);
+          break;
+            case DOWN:
+            writeToMatrix(theMap, Xposition + xDist, Yposition - yDist, MOUNTAIN);
+          case LEFT:
+            writeToMatrix(theMap, Xposition + yDist, Yposition + xDist, MOUNTAIN);
+          break;
+      }
       }
     }
   }
@@ -304,17 +323,48 @@ void scan() {
 
 void roam() {
   //scan(); // robot sweeps head
-  if ((gap || forwardUS <= 40) && failCount == 0) {
-    turnRight(); // robot turns right
-    failCount++;
+  //if ((gap || forwardUS <= 40) && failCount == 0) {
+    if(Xposition == targetX && Yposition == targetY){
+      while(1);
+    } else if(Xposition == targetX){
+      if(currDirection == LEFT){
+        turnRight();
+      } else if(currDirection == RIGHT){
+        turnLeft();
+      } else {
+        driveForward();
+      }
+    } else if(Yposition == targetY){
+      if(currDirection == UP){
+        turnLeft();
+      } else if(currDirection == DOWN){
+        turnRight();
+      } else if(Xposition > targetX){
+        driveForward();
+      } else if (1){
+        
+      }
+    } else {
+      if(Xposition > targetX && Yposition > targetY){
+        
+      } else if(Xposition > targetX && Yposition < targetY){
+        
+      } else if(Xposition < targetX && Yposition > targetY){
+        
+      } else if(Xposition < targetX && Yposition < targetY){
+        
+      }
     }
+    /*turnRight(); // robot turns right
+    failCount++;*/
+    //}
   /*else if ((gap || forwardUS <= 40) && failCount == 1) {
     turnLeft(); // robot turns left
     failCount++;
   }*/
-  else {
+  /*else {
     driveForward(); // robot moves forward
-  }
+  }*/
   failCount = 0;
   if (closeUS == 1) {
     delay(250);
