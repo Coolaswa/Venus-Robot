@@ -29,7 +29,7 @@ void setup() {
 }
 
 void loop() {
-  if (rock == 0) {
+  if (rock == 0 && rockInGripper == 0) {
     /*if (gap == 0) {
       gapCalibrate();
     }*/
@@ -50,12 +50,19 @@ void loop() {
   Serial.print("Direction: ");
   Serial.println(currDirection, DEC);
   displayMatrix(theMap, Xsize, Ysize);
-  } else if (rock) {
+  }
+  else if (rock == 1 && rockInGripper == 0) {
     head.write(90);
     delay(600);
     alignToRock();
     grabRock();
     alignToMap();
     // find lab and drop sample
+  }
+  else if (rockInGripper) {
+    stopRobot();
+    findLab();
+
+    resetPath();
   }
 }

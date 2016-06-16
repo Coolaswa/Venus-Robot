@@ -3,7 +3,6 @@
 #include "Motor.h"
 
 bool rockForward = 0;
-bool rockInGripper = 0;
 bool rockHug = 0;
 
 int rockAngleEncoder = 0;
@@ -28,7 +27,7 @@ void alignToRock() { // changes reference from map to sample
 }
 
 void atRock() {
-  Serial.println(analogRead(4));
+  //Serial.println(analogRead(4));
   if (analogRead(4) > 200) {
     rockHug = 1;
   }
@@ -62,7 +61,7 @@ void grabRock() { // grabs sample
 
 void alignToMap() { // changes reference from sample to map
   bool lr = 0;
-  if ((16 - rockAngleEncoder) > rockAngleEncoder) {
+  if ((16 - rockAngleEncoder) < rockAngleEncoder) {
     rightEncoder = 16 - rockAngleEncoder;
     lr = 1;
   }
@@ -74,12 +73,12 @@ void alignToMap() { // changes reference from sample to map
   reverse = 1;
   while (rightEncoder > 0) { // turns back into original angle
     if (lr = 0) {
-      rightWheel.write(0);
-      leftWheel.write(0);
-    }
-    if (lr = 1) {
       rightWheel.write(180);
       leftWheel.write(180);
+    }
+    if (lr = 1) {
+      rightWheel.write(0);
+      leftWheel.write(0);
     }
   }
   rightEncoder = backToMapEncoder;
@@ -94,5 +93,4 @@ void alignToMap() { // changes reference from sample to map
   rock = 0;
   return;
 }
-
 

@@ -13,7 +13,7 @@ int readSamples(){
   return diff;*/
 
   int value = analogRead(5);
-  //Serial.println(value);
+  Serial.println(value);
   return value;
 }
 

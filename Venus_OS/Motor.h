@@ -5,6 +5,7 @@
 #include "Mapping.h"
 #include "OS_functions.h"
 #include "Samples.h"
+#include "Lab.h"
 #define rightEncoderPin 8
 #define leftEncoderPin 7
 
@@ -15,6 +16,7 @@ int ultraSoundDist = 0;
 int USPos = 0;
 int rightFloor = 0;
 int leftFloor = 0;
+int rampFailCount = 0;
 
 int failCount = 0;
 int forwardUS = 200;
@@ -27,8 +29,12 @@ int backToMapEncoder = 0;
 bool gap = 0;
 bool closeUS = 0;
 bool rock = 0;
+bool rockInGripper = 0;
 
-byte Xposition = 15; 
+bool axisOrientation = 0;
+bool leftOrRight = 0;
+
+byte Xposition = 15;
 byte Yposition = 15; //Variables that keep track of the robots current position
 
 enum direction_t {UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3}; //Up is +Y direction, right is +X direction
@@ -47,15 +53,15 @@ void gapCalibrate() {
   int right = 0;
   int left = 0;
   for (i = 0; i < 10; i++) {
-  right = analogRead(1);
-  left = analogRead(2);
-  //Serial.println(rightFloor);
-  //Serial.println(leftFloor);
-  rightFloor = rightFloor + right;
-  leftFloor = leftFloor + left;
+    right = analogRead(1);
+    left = analogRead(2);
+    //Serial.println(rightFloor);
+    //Serial.println(leftFloor);
+    rightFloor = rightFloor + right;
+    leftFloor = leftFloor + left;
   }
-  rightFloor = rightFloor/10;
-  leftFloor = leftFloor/10;
+  rightFloor = rightFloor / 10;
+  leftFloor = leftFloor / 10;
 }
 
 void calcUSRelLoc() {
@@ -63,13 +69,13 @@ void calcUSRelLoc() {
   head.write(USPos);
   dist = centimetersToTarget();
   Serial.print("Distance to mountain: ");
-  Serial.println(dist,DEC);
-  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f))/10); //VERY CPU intensive code!
-  yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f))/10);
+  Serial.println(dist, DEC);
+  xDist = (int)((dist * cos((float)((float)USPos * 3.14159265f) / 90.0f)) / 10); //VERY CPU intensive code!
+  yDist = (int)((dist * sin((float)((float)USPos * 3.14159265f) / 90.0f)) / 10);
   Serial.print("US X-coord: ");
-  Serial.println(xDist,DEC);
+  Serial.println(xDist, DEC);
   Serial.print("US Y-coord: ");
-  Serial.println(yDist,DEC);
+  Serial.println(yDist, DEC);
   USPos = 0;
   return;
 }
@@ -105,7 +111,7 @@ void checkRock() {
   int i = readSamples();
   if (i > 500 && i < 850) {
     rock = 1;
-    Serial.println(readSamples());
+    //Serial.println(readSamples());
   }
   //Serial.write(readSamples());
   return;
@@ -118,84 +124,84 @@ void checkUS() {
   return;
 }
 
-void checkSides(){
-    int i;
-    for (i = 0; i < 10; i++) { // robot looks at the ground to see if there is a gap or not
-      if (analogRead(1) > (rightFloor+35)) {
-        rightBlackCounter++;
-      }
-      else {
-        rightWhiteCounter++;
-      }
-      if (analogRead(2) > (leftFloor+35)) {
-        leftBlackCounter++;
-      }
-      else {
-        leftWhiteCounter++;
-      }
+void checkSides() {
+  int i;
+  for (i = 0; i < 10; i++) { // robot looks at the ground to see if there is a gap or not
+    if (analogRead(1) > (rightFloor + 35)) {
+      rightBlackCounter++;
     }
-    if (rightBlackCounter > rightWhiteCounter) {
-      gapRight = 1;
+    else {
+      rightWhiteCounter++;
     }
-    if (leftBlackCounter > leftWhiteCounter) {
-      gapLeft = 1;
+    if (analogRead(2) > (leftFloor + 35)) {
+      leftBlackCounter++;
     }
-    return;
+    else {
+      leftWhiteCounter++;
+    }
+  }
+  if (rightBlackCounter > rightWhiteCounter) {
+    gapRight = 1;
+  }
+  if (leftBlackCounter > leftWhiteCounter) {
+    gapLeft = 1;
+  }
+  return;
 }
 
-void writeBorderToMap(){
-        if(rightEncoder < 8){
-        switch(currDirection){
-          case UP:
-            writeToMatrix(theMap, Xposition, Yposition + 1, BORDER);
-            break;
-          case RIGHT:
-            writeToMatrix(theMap, Xposition + 1, Yposition, BORDER);
-            break;
-          case DOWN:
-            writeToMatrix(theMap, Xposition, Yposition - 1, BORDER);
-            break;
-          case LEFT:
-            writeToMatrix(theMap, Xposition - 1, Yposition, BORDER);
-            break;
-        }
-      } else {
-        switch(currDirection){
-          case UP:
-            writeToMatrix(theMap, Xposition, Yposition + 2, BORDER);
-            writeToMatrix(theMap, Xposition, Yposition + 1, EMPTY);
-            break;
-          case RIGHT:
-            writeToMatrix(theMap, Xposition + 2, Yposition, BORDER);
-            writeToMatrix(theMap, Xposition + 1, Yposition, EMPTY);
-            break;
-          case DOWN:
-            writeToMatrix(theMap, Xposition, Yposition - 2, BORDER);
-            writeToMatrix(theMap, Xposition, Yposition -1, EMPTY);
-            break;
-          case LEFT:
-            writeToMatrix(theMap, Xposition - 2, Yposition, BORDER);
-            writeToMatrix(theMap, Xposition -1, Yposition, EMPTY);
-            break;
-        }
-      }
+void writeBorderToMap() {
+  if (rightEncoder < 8) {
+    switch (currDirection) {
+      case UP:
+        writeToMatrix(theMap, Xposition, Yposition + 1, BORDER);
+        break;
+      case RIGHT:
+        writeToMatrix(theMap, Xposition + 1, Yposition, BORDER);
+        break;
+      case DOWN:
+        writeToMatrix(theMap, Xposition, Yposition - 1, BORDER);
+        break;
+      case LEFT:
+        writeToMatrix(theMap, Xposition - 1, Yposition, BORDER);
+        break;
+    }
+  } else {
+    switch (currDirection) {
+      case UP:
+        writeToMatrix(theMap, Xposition, Yposition + 2, BORDER);
+        writeToMatrix(theMap, Xposition, Yposition + 1, EMPTY);
+        break;
+      case RIGHT:
+        writeToMatrix(theMap, Xposition + 2, Yposition, BORDER);
+        writeToMatrix(theMap, Xposition + 1, Yposition, EMPTY);
+        break;
+      case DOWN:
+        writeToMatrix(theMap, Xposition, Yposition - 2, BORDER);
+        writeToMatrix(theMap, Xposition, Yposition - 1, EMPTY);
+        break;
+      case LEFT:
+        writeToMatrix(theMap, Xposition - 2, Yposition, BORDER);
+        writeToMatrix(theMap, Xposition - 1, Yposition, EMPTY);
+        break;
+    }
+  }
 }
 
-void updatePosition(){
-          switch(currDirection){
-          case UP:
-            Yposition++;
-            break;
-          case RIGHT:
-            Xposition++;
-            break;
-          case DOWN:
-            Yposition--;
-            break;
-          case LEFT:
-            Xposition--;
-            break;
-        }
+void updatePosition() {
+  switch (currDirection) {
+    case UP:
+      Yposition++;
+      break;
+    case RIGHT:
+      Xposition++;
+      break;
+    case DOWN:
+      Yposition--;
+      break;
+    case LEFT:
+      Xposition--;
+      break;
+  }
 }
 
 void driveForward() {
@@ -203,22 +209,20 @@ void driveForward() {
     rightWheel.write(0);
     leftWheel.write(180);
 
-    
-
     rightBlackCounter = 0;
     rightWhiteCounter = 0;
     leftBlackCounter = 0;
     leftWhiteCounter = 0;
-    
+
     checkRock();
-    Serial.println(readSamples());
+    //Serial.println(readSamples());
     if (rock) {
-      
+
       backToMapEncoder = rightEncoder;
       stopRobot();
       return;
     }
-    
+
     checkSides();
     checkGap();
     if (gap) {
@@ -227,9 +231,9 @@ void driveForward() {
     }
     ultraSoundDist = centimetersToTarget(); // robot scans around
     checkUS(); // checks for close objects with US data
-        checkRock();
-    if (rock) {
-      
+    checkRock();
+    if (rock == 1 && rockInGripper == 0) {
+
       backToMapEncoder = rightEncoder;
       stopRobot();
       return;
@@ -246,6 +250,7 @@ void driveForward() {
     writeToMatrix(theMap, Xposition, Yposition, EMPTY);
     updatePosition();
     writeToMatrix(theMap, Xposition, Yposition, EMPTY);
+    oneForward();
   }
   return;
 }
@@ -266,11 +271,12 @@ void turnRight() {
     leftWheel.write(180);
   }
   stopRobot(); // robot stops
-  if(currDirection < LEFT){
+  if (currDirection < LEFT) {
     currDirection = (direction_t)((direction_t)currDirection + (direction_t)RIGHT);
   } else {
     currDirection = UP;
   }
+  wentRight();
   return;
 }
 
@@ -290,11 +296,12 @@ void turnLeft() {
     leftWheel.write(0);
   }
   stopRobot(); // robot stops
-  if(currDirection == UP){
+  if (currDirection == UP) {
     currDirection = LEFT;
   } else {
     currDirection = (direction_t)((direction_t)currDirection - (direction_t)RIGHT);
   }
+  wentLeft();
   return;
 }
 
@@ -310,21 +317,222 @@ void scan() {
     if (ultraSoundDist <= 32) {
       USPos = pos; // saves position with low value, priority to targets to the front
       calcUSRelLoc();
-      switch(currDirection){
+      switch (currDirection) {
         case UP:
           writeToMatrix(theMap, Xposition - xDist, Yposition + yDist, MOUNTAIN);
-        break;
+          break;
         case RIGHT:
           writeToMatrix(theMap, Xposition + yDist, Yposition + xDist, MOUNTAIN);
-        break;
-          case DOWN:
+          break;
+        case DOWN:
           writeToMatrix(theMap, Xposition + xDist, Yposition - yDist, MOUNTAIN);
         case LEFT:
           writeToMatrix(theMap, Xposition - yDist, Yposition - xDist, MOUNTAIN);
-        break;
+          break;
       }
     }
   }
+  return;
+}
+
+void orient() {
+  switch (directionFaced) {
+    case UP:
+      turnLeft();
+      break;
+    case RIGHT:
+      turnRight();
+      break;
+    case DOWN:
+      break;
+    case LEFT:
+      turnLeft();
+      turnRight();
+      break;
+  }
+  /*  switch (currDirection) {
+
+      case UP:
+        if (yPath > 0) {
+          turnLeft();
+        }
+        if (yPath == 0) {
+          if (xPath > 0) {
+            turnLeft();
+            turnRight();
+          }
+          if (xPath < 0) {
+            turnRight();
+          }
+        }
+        break;
+
+      case RIGHT:
+        if (xPath > 0) {
+          turnLeft();
+        }
+        if (xPath == 0) {
+          if (yPath > 0) {
+            turnRight();
+          }
+          if (yPath < 0) {
+            turnLeft();
+            turnRight();
+          }
+        }
+        break;
+
+      case DOWN:
+        if (yPath < 0) {
+          turnLeft();
+        }
+        if (yPath == 0) {
+          if (xPath > 0) {
+            turnRight();
+          }
+          if (xPath < 0) {
+            turnLeft();
+            turnRight();
+          }
+        }
+        break;
+
+      case LEFT:
+        if (xPath < 0) {
+          turnLeft();
+        }
+        if (xPath == 0) {
+          if (yPath > 0) {
+            turnLeft();
+            turnRight();
+          }
+          if (yPath < 0) {
+            turnRight();
+          }
+        }
+        break;
+    }*/
+}
+
+void toTheLab() {
+  int i;
+  if (yPath < 0) {
+    turnLeft();
+    for (i = yPath; i < 0; i++) {
+      driveForward();
+    }
+    if (xPath > 0) {
+      turnRight();
+      turnLeft();
+      for (i = 0; i < xPath; i++) {
+        driveForward();
+      }
+    }
+    if (xPath < 0) {
+      turnRight();
+      for (i = xPath; i < 0; i++) {
+        driveForward();
+      }
+    }
+  }
+  if (yPath > 0) {
+    for (i = 0; i < yPath; i++) {
+      driveForward();
+    }
+    if (xPath > 0) {
+      turnRight();
+      for (i = 0; i < xPath; i++) {
+        driveForward();
+      }
+    }
+    if (xPath < 0) {
+      turnLeft();
+      turnRight();
+      for (i = xPath; i < 0; i++) {
+        driveForward();
+      }
+    }
+  }
+  if (yPath == 0) {
+    if (xPath > 0) {
+      turnRight();
+      for (i = 0; i < xPath; i++) {
+        driveForward();
+      }
+    }
+    if (xPath < 0) {
+      turnLeft();
+      turnRight();
+      for (i = xPath; i < 0; i++) {
+        driveForward();
+      }
+    }
+  }
+  return;
+}
+
+void touchTheLab() {
+  leftWheel.write(90);
+  rightWheel.write(90);
+  int i;
+  for (i = 90; i < 180; i++) {
+    rightWheel.write(i);
+    checkRock();
+    if (rock) {
+      break;
+    }
+  }
+  return;
+}
+
+void followTheLab() {
+
+  while (readSamples() > 200) {
+    rightWheel.write(0);
+    leftWheel.write(180);
+  }
+  checkSides();
+  checkGap();
+  if (gap) {
+    gripperOpen();
+    rockInGripper = 0;
+    rightWheel.write(180);
+    leftWheel.write(0);
+    delay(300);
+    return;
+  }
+  stopRobot();
+  if (leftOrRight = 0) {
+    while (rightEncoder < rampFailCount) {
+      rightWheel.write(0);
+      leftWheel.write(0);
+    }
+    stopRobot();
+    leftOrRight = 1;
+    rampFailCount++;
+  }
+  if (leftOrRight = 1) {
+    while(rightEncoder < rampFailCount) {
+      rightWheel.write(180);
+      leftWheel.write(180);
+    }
+    stopRobot();
+    leftOrRight = 0;
+    rampFailCount++;
+  }
+  followTheLab();
+}
+
+void findLab() {
+  foundRock();
+  determinePath();
+  orient();
+  toTheLab();
+  stopRobot();
+  /* // Sequence of dropping sample in lab, probably doesn't work
+  touchTheLab();
+  followTheLab();
+   */
   return;
 }
 
@@ -334,7 +542,7 @@ void roam() {
   if ((gap || forwardUS <= 40) && failCount == 0) {
     turnRight(); // robot turns right
     failCount++;
-    }
+  }
   else if ((gap || forwardUS <= 40) && failCount == 1) {
     turnLeft(); // robot turns left
     failCount++;
@@ -348,5 +556,5 @@ void roam() {
     scan();
     calcUSRelLoc();
   }
-  
+
 }
